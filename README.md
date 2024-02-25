@@ -43,7 +43,7 @@ $ make
   - IPLD库。其中一些基于并改编自[Forest](https://github.com/ChainSafe/forest)实现。
 - `/testing/conformance`
   - 包含测试向量运行器以及在其上的基准测试实用工具。
-  - 符合性测试运行器将位于https://github.com/filecoin-project/fvm-test-vectors的测试向量语料库输入ref-fvm，以验证规范符合性。
+  - 符合性测试运行器将位于https://github.com/filecoin-project/fvm-test-vectors 的测试向量语料库输入ref-fvm，以验证规范符合性。
   - 基准测试工具使用`criterion` Rust库来衡量ref-fvm在各个方面的性能和开销。
   - 请参阅[说明](./testing/conformance/README.md#instructions)了解如何运行测试和基准测试。
   - 免责声明
