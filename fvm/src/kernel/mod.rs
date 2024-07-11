@@ -224,12 +224,29 @@ pub trait ActorOps {
 #[delegatable_trait]
 pub trait CryptoOps {
     /// Verifies that a signature is valid for an address and plaintext.
+    #[cfg(feature = "verify-signature")]
     fn verify_signature(
         &self,
         sig_type: SignatureType,
         signature: &[u8],
         signer: &Address,
         plaintext: &[u8],
+    ) -> Result<bool>;
+
+    /// Verifies a BLS aggregate signature. In the case where there is one signer/signed plaintext,
+    /// this is equivalent to verifying a non-aggregated BLS signature.
+    ///
+    /// Returns:
+    /// - `Ok(true)` on a valid signature.
+    /// - `Ok(false)` on an invalid signature or if the signature or public keys' bytes represent an
+    ///    invalid curve point.
+    /// - `Err(IllegalArgument)` if `pub_keys.len() != plaintexts.len()`.
+    fn verify_bls_aggregate(
+        &self,
+        aggregate_sig: &[u8; fvm_shared::crypto::signature::BLS_SIG_LEN],
+        pub_keys: &[[u8; fvm_shared::crypto::signature::BLS_PUB_LEN]],
+        plaintexts_concat: &[u8],
+        plaintext_lens: &[u32],
     ) -> Result<bool>;
 
     /// Given a message hash and its signature, recovers the public key of the signer.
@@ -290,19 +307,15 @@ pub trait EventOps {
     ) -> Result<()>;
 }
 
-// Unfortunately, I need to do this to make it possible to name these macros by path. I'm hiding
-// this because I really don't want users to glob import the `kernel` module.
-#[doc(hidden)]
-pub use {
-    ambassador_impl_CryptoOps, ambassador_impl_DebugOps, ambassador_impl_EventOps,
-    ambassador_impl_IpldBlockOps, ambassador_impl_MessageOps, ambassador_impl_NetworkOps,
-    ambassador_impl_RandomnessOps, ambassador_impl_SelfOps, ambassador_impl_SendOps,
-    ambassador_impl_UpgradeOps,
-};
-
 /// Import this module (with a glob) if you're implementing a kernel, _especially_ if you want to
 /// use ambassador to delegate the implementation.
 pub mod prelude {
+    pub use super::{
+        ambassador_impl_ActorOps, ambassador_impl_CryptoOps, ambassador_impl_DebugOps,
+        ambassador_impl_EventOps, ambassador_impl_IpldBlockOps, ambassador_impl_MessageOps,
+        ambassador_impl_NetworkOps, ambassador_impl_RandomnessOps, ambassador_impl_SelfOps,
+        ambassador_impl_SendOps, ambassador_impl_UpgradeOps,
+    };
     pub use super::{
         ActorOps, CryptoOps, DebugOps, EventOps, IpldBlockOps, MessageOps, NetworkOps,
         RandomnessOps, SelfOps, SendOps, UpgradeOps,
@@ -325,12 +338,6 @@ pub mod prelude {
     pub use fvm_shared::version::NetworkVersion;
     pub use fvm_shared::{ActorID, MethodNum};
     pub use multihash::Multihash;
-    pub use {
-        ambassador_impl_ActorOps, ambassador_impl_CryptoOps, ambassador_impl_DebugOps,
-        ambassador_impl_EventOps, ambassador_impl_IpldBlockOps, ambassador_impl_MessageOps,
-        ambassador_impl_NetworkOps, ambassador_impl_RandomnessOps, ambassador_impl_SelfOps,
-        ambassador_impl_SendOps, ambassador_impl_UpgradeOps,
-    };
 }
 
 use prelude::*;
